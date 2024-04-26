@@ -168,12 +168,14 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
      * @throws IllegalStateException if the tree is not empty
      */
     public Position<E> addRoot(E e) throws IllegalStateException {
-        // TODO
-        return null;
+        root = createNode(e, null, null, null);;
+        return root;
     }
 
     public void insert(E e) {
-        // TODO
+        if (size() == 0) {
+            addRoot(e);
+        }
 
     }
 
@@ -238,7 +240,14 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
      * @throws IllegalArgumentException if p is not a leaf
      */
     public void attach(Position<E> p, LinkedBinaryTree<E> t1, LinkedBinaryTree<E> t2) throws IllegalArgumentException {
-        // TODO
+        Node<E> n = (Node<E>) p;
+        Node<E> leftRoot = (Node<E>) t1.root();
+        Node<E> rightRoot = (Node<E>) t2.root();
+        n.setLeft(leftRoot);
+        n.setRight(rightRoot);
+
+        ((Node<E>) t1.root()).setParent(n);
+        ((Node<E>) t2.root()).setParent(n);
     }
 
     /**
@@ -284,7 +293,7 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
     /**
      * Nested static class for a binary tree node.
      */
-    protected static class Node<E> implements Position<E> {
+    public static class Node<E> implements Position<E> {
         private E element;
         private Node<E> left, right, parent;
 

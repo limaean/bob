@@ -1,14 +1,13 @@
 package wordle;
 
 import project20280.interfaces.Entry;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class Wordle {
+public class WordleCalc {
 
     String fileName = "wordle/resources/dictionary.txt";
     //String fileName = "wordle/resources/extended-dictionary.txt";
@@ -27,7 +26,7 @@ public class Wordle {
     public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
     public static final String ANSI_GREY_BACKGROUND = "\u001B[100m";
 
-    Wordle() {
+    WordleCalc() {
 
         this.dictionary = readDictionary(fileName);
 
@@ -37,7 +36,7 @@ public class Wordle {
     }
 
     public static void main(String[] args) {
-        Wordle game = new Wordle();
+        WordleCalc game = new WordleCalc();
 
         String target = game.getRandomTargetWord();
 
@@ -54,14 +53,14 @@ public class Wordle {
         Map<String, Integer> freqMap1 = Huffman.freqCounter(readDictionary(fileName));
         for(int i = 0; i < num_guesses; ++i) {
             if (i == 0) {
-                entry = solveInitial(freqMap1, dictionary);
+                entry = solveInitial(freqMap1, dictionary, target);
             }
             else if (i == 1) {
                 Map<String, Integer> freqMap2 = entry.getKey();
-                entry = solveInitial(freqMap2, entry.getValue());
+                entry = solveInitial(freqMap2, entry.getValue(), target);
             }
             else {
-                solverPast(wrongAList, rightLetters);
+                //String guess = solverPast(wrongAList, rightLetters, target);
             }
             String guess = getGuess();
 
@@ -118,14 +117,14 @@ public class Wordle {
                 if(hint[k] == "+") num_green += 1;
             }
             if(num_green == 5) {
-                 win(target);
-                 return;
+                win(target);
+                return;
             }
         }
 
         lost(target);
     }
-    public HEntry<Map<String, Integer>, List<String>> solveInitial(Map<String, Integer> freqMap, List<String> dictionary) {
+    public HEntry<Map<String, Integer>, List<String>> solveInitial(Map<String, Integer> freqMap, List<String> dictionary, String target) {
         //copy array
         dictionary = new ArrayList<>(dictionary);
         int[] topValues = new int[3];
@@ -205,7 +204,7 @@ public class Wordle {
         HEntry<Map<String, Integer>, List<String>> mapNList = new HEntry<>(freqMap, dictionary);
         return mapNList;
     }
-    public void solverPast(ArrayList<String> wrongList, Map<String, Integer> rightLetters) {
+    public void solverPast(ArrayList<String> wrongList, Map<String, Integer> rightLetters, String target) {
         /*find 3 most common letters */
         ArrayList<String> wordsToRemove = new ArrayList<>();
 
@@ -229,7 +228,9 @@ public class Wordle {
         dictionary.removeAll(wordsToRemove);
         // Remove the words that need to be removed
         System.out.println(dictionary);
-        System.out.println(getRandomTargetWord());
+        if(Objects.equals(getRandomTargetWord(), target)) { // you won!
+            win(target);
+        }
     }
     //utility function
     public static boolean hasDuplicateCharacters(String word) {
@@ -291,7 +292,7 @@ public class Wordle {
         }
         return userWord;
     }
-//utility
+    //utility
     public static int countOccurrences(String str, String target) {
         int count = 0;
         for (int i = 0; i < str.length(); i++) {
