@@ -109,7 +109,7 @@ public abstract class AbstractTree<E> implements Tree<E> {
      * <p>
      * Note: This implementation works, but runs in O(n^2) worst-case time.
      */
-    private int heightBad() {             // works, but quadratic worst-case time
+    public int heightBad() {             // works, but quadratic worst-case time
         int h = 0;
         for (Position<E> p : positions())
             if (isExternal(p))                // only consider leaf positions
@@ -123,8 +123,7 @@ public abstract class AbstractTree<E> implements Tree<E> {
      * @param p A valid Position within the tree
      * @throws IllegalArgumentException if p is not a valid Position for this tree.
      */
-    public int height(Position<E> p) throws IllegalArgumentException {
-        // TODO
+    public int height(Position<E> p) {
         return 0;
     }
 

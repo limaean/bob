@@ -13,6 +13,23 @@ public class LinkedDeque<E> implements Deque<E> {
 
     public static void main(String[] args) {
         // TODO Auto-generated method stub
+        LinkedDeque<Integer> deque = new LinkedDeque<>();
+        deque.addFirst(10);
+        deque.addLast(20);
+        deque.addFirst(5);
+        deque.addLast(25);
+
+        System.out.println("Deque after additions: " + deque);
+        System.out.println("First element: " + deque.first());
+        System.out.println("Last element: " + deque.last());
+        System.out.println("Size of deque: " + deque.size());
+
+        deque.removeFirst();
+        deque.removeLast();
+
+        System.out.println("Deque after removals: " + deque);
+        System.out.println("New first element: " + deque.first());
+        System.out.println("New last element: " + deque.last());
 
     }
 

@@ -14,7 +14,7 @@ public class WordleCalc {
     List<String> dictionary = null;
 
     int guesses = 0;
-    final int num_guesses = 5;
+    final int num_guesses = 6;
     final long seed = 42;
     //Random rand = new Random(seed);
     Random rand = new Random();
@@ -36,37 +36,45 @@ public class WordleCalc {
     }
 
     public static void main(String[] args) {
-        WordleCalc game = new WordleCalc();
 
-        String target = game.getRandomTargetWord();
-
-        System.out.println(target);
-
-        game.play(target);
-
+        int j = 0;
+        for (int i=0; i < 100; i++) {
+            WordleCalc game = new WordleCalc();
+            String target = game.getRandomTargetWord();
+            System.out.println(target);
+            Boolean bool = game.play(target);
+            if (!(bool)) {
+                j++;
+            }
+            System.out.print("number of successes: " + j);
+        }
     }
 
-    public void play(String target) {
+    public boolean play(String target) {
         ArrayList<String> wrongAList = new ArrayList<>();
+        ArrayList<String> superWrongAList = new ArrayList<>();
         Map<String, Integer> rightLetters = new HashMap<>();
         HEntry<Map<String, Integer>, List<String>> entry = null;
         Map<String, Integer> freqMap1 = Huffman.freqCounter(readDictionary(fileName));
+        String[] guessArr = new String[1];
         for(int i = 0; i < num_guesses; ++i) {
             if (i == 0) {
-                entry = solveInitial(freqMap1, dictionary, target);
+                entry = solveInitial(freqMap1, dictionary, guessArr);
             }
             else if (i == 1) {
                 Map<String, Integer> freqMap2 = entry.getKey();
-                entry = solveInitial(freqMap2, entry.getValue(), target);
+                entry = solveInitial(freqMap2, entry.getValue(), guessArr);
             }
             else {
-                //String guess = solverPast(wrongAList, rightLetters, target);
+                solverPast(wrongAList, superWrongAList, rightLetters, guessArr);
             }
-            String guess = getGuess();
+
+            String guess = guessArr[0];
+            System.out.println(guess);
 
             if(guess == target) { // you won!
                 win(target);
-                return;
+                return false;
             }
 
             // the hint is a string where green="+", yellow="o", grey="_"
@@ -84,7 +92,7 @@ public class WordleCalc {
             // loop over each entry:
             //  if hint == "+" (green) skip it
             //  else check if the letter is present in the target word. If yes, set to "o" (yellow)
-            //ArrayList<Character> wrongLetters = new ArrayList<>();
+
             String wrongLetters = "";
             for (int k = 0; k < 5; k++) {
                 if (hint[k] != "+") {
@@ -98,11 +106,18 @@ public class WordleCalc {
                 }
                 int letterIndex = wrongLetters.indexOf(guess.charAt(k));
                 if (letterIndex > -1) {
-                    hint[k] = "o";
-                    wrongLetters = removeCharAtIndex(wrongLetters, letterIndex);
+                    if (!(hasDuplicateLetterPreceding(guess, k))) {
+                        hint[k] = "o";
+                        wrongLetters = removeCharAtIndex(wrongLetters, letterIndex);
+                    }
                 }
                 else {
-                    wrongAList.add(String.valueOf(guess.charAt(k)));
+                    if (countOccurrences(guess, String.valueOf(guess.charAt(k))) == 1) {
+                        superWrongAList.add(String.valueOf(guess.charAt(k)));
+                    }
+                    if (!(countOccurrences(guess, String.valueOf(guess.charAt(k))) == 3)) {
+                        wrongAList.add(String.valueOf(guess.charAt(k)));
+                    }
                 }
             }
 
@@ -118,13 +133,13 @@ public class WordleCalc {
             }
             if(num_green == 5) {
                 win(target);
-                return;
+                return false;
             }
         }
-
         lost(target);
+        return true;
     }
-    public HEntry<Map<String, Integer>, List<String>> solveInitial(Map<String, Integer> freqMap, List<String> dictionary, String target) {
+    public HEntry<Map<String, Integer>, List<String>> solveInitial(Map<String, Integer> freqMap, List<String> dictionary, String[] guessArr) {
         //copy array
         dictionary = new ArrayList<>(dictionary);
         int[] topValues = new int[3];
@@ -200,11 +215,11 @@ public class WordleCalc {
                 }
             }
         }
-        System.out.println(mostWord);
+        guessArr[0] = mostWord;
         HEntry<Map<String, Integer>, List<String>> mapNList = new HEntry<>(freqMap, dictionary);
         return mapNList;
     }
-    public void solverPast(ArrayList<String> wrongList, Map<String, Integer> rightLetters, String target) {
+    public void solverPast(ArrayList<String> wrongList, ArrayList<String> superWrongList, Map<String, Integer> rightLetters, String[] guessArr) {
         /*find 3 most common letters */
         ArrayList<String> wordsToRemove = new ArrayList<>();
 
@@ -213,24 +228,33 @@ public class WordleCalc {
             Iterator<String> iterator = dictionary.iterator();
             while (iterator.hasNext()) {
                 String s = iterator.next();
-                if (countOccurrences(s, subS) == 1 && (rightLetters.get(subS) == null)) {
+                if (countOccurrences(s,subS) == 2) {
                     wordsToRemove.add(s);
                 }
+            }
+            iterator = dictionary.iterator();
+            while (iterator.hasNext()) {
+                String s = iterator.next();
                 for (Map.Entry<String, Integer> entry : rightLetters.entrySet()) {
                     if (!String.valueOf(s.charAt(entry.getValue())).equals(entry.getKey())) {
                         wordsToRemove.add(s);
                     }
                 }
             }
-
-
+        }
+        for (String wrongS : superWrongList) {
+            Iterator<String> iterator = dictionary.iterator();
+            while (iterator.hasNext()) {
+                String s = iterator.next();
+                if (s.contains(wrongS)) {
+                    wordsToRemove.add(s);
+                }
+            }
         }
         dictionary.removeAll(wordsToRemove);
         // Remove the words that need to be removed
-        System.out.println(dictionary);
-        if(Objects.equals(getRandomTargetWord(), target)) { // you won!
-            win(target);
-        }
+        guessArr[0] = getRandomTargetWord();
+        dictionary.remove(guessArr[0]);
     }
     //utility function
     public static boolean hasDuplicateCharacters(String word) {
@@ -253,6 +277,19 @@ public class WordleCalc {
         }
         return false;
     }
+
+    //utility function
+    public static boolean hasDuplicateLetterPreceding(String str, int index) {
+        char letterToCheck = str.charAt(index);
+
+        for (int i = 0; i < index; i++) {
+            if (str.charAt(i) == letterToCheck) {
+                return true; // Found a duplicate letter preceding the specified index
+            }
+        }
+        return false; // No duplicate letter preceding the specified index
+    }
+
     //utility function
     public static String removeCharAtIndex(String str, int index) {
 
@@ -260,6 +297,7 @@ public class WordleCalc {
         return str.substring(0, index) + str.substring(index + 1);
     }
     public void lost(String target) {
+
         System.out.println();
         System.out.println(lostMessage + target.toUpperCase() + ".");
         System.out.println();

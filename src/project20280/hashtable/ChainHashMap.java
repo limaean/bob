@@ -1,8 +1,12 @@
 package project20280.hashtable;
 
+import com.sun.net.httpserver.Filter;
 import project20280.interfaces.Entry;
+import project20280.interfaces.Map;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Random;
 
 /*
  * Map implementation using hash table with separate chaining.
@@ -37,7 +41,6 @@ public class ChainHashMap<K, V> extends AbstractHashMap<K, V> {
      * Creates an empty table having length equal to current capacity.
      */
     @Override
-    @SuppressWarnings({"unchecked"})
     protected void createTable() {
         table = new UnsortedTableMap[capacity];
     }
@@ -52,8 +55,7 @@ public class ChainHashMap<K, V> extends AbstractHashMap<K, V> {
      */
     @Override
     protected V bucketGet(int h, K k) {
-        // TODO
-        return null;
+        return (table[h].get(k));
     }
 
     /**
@@ -67,8 +69,10 @@ public class ChainHashMap<K, V> extends AbstractHashMap<K, V> {
      */
     @Override
     protected V bucketPut(int h, K k, V v) {
-        // TODO
-        return null;
+        if(table[h]==null){
+            table[h]= new UnsortedTableMap<>();
+        }
+        return table[h].put(k,v);
     }
 
 
@@ -82,8 +86,7 @@ public class ChainHashMap<K, V> extends AbstractHashMap<K, V> {
      */
     @Override
     protected V bucketRemove(int h, K k) {
-        // TODO
-        return null;
+        return table[h].remove(k);
     }
 
     /**
@@ -93,11 +96,7 @@ public class ChainHashMap<K, V> extends AbstractHashMap<K, V> {
      */
     @Override
     public Iterable<Entry<K, V>> entrySet() {
-        /*
-        for each element in (UnsortedTableMap []) table
-            for each element in bucket:
-                print element
-        */
+
         ArrayList<Entry<K, V>> entries = new ArrayList<>();
         for (UnsortedTableMap<K, V> tm : table) {
             if (tm != null) {
@@ -108,9 +107,43 @@ public class ChainHashMap<K, V> extends AbstractHashMap<K, V> {
         }
         return entries;
     }
-
+    public Boolean contains(K k) {
+        for (K key : this.keySet()) {
+            if (key.equals(k)) {
+                return true;
+            }
+        }
+        return false;
+    }
     public String toString() {
         return entrySet().toString();
+    }
+
+    public static double testSpeed() {
+        ChainHashMap<Integer, Integer> chm = new ChainHashMap<>();
+        HashMap<Integer, Integer> hm = new HashMap<>();
+
+        HashMap<Integer, Integer> dataset = new HashMap<>();
+        Random random = new Random();
+        for (int i = 0; i < 10000; i++) {
+            dataset.put(i, i);
+        }
+
+        long start = System.nanoTime();
+        for (java.util.Map.Entry<Integer, Integer> entry : dataset.entrySet()) {
+            chm.put(entry.getKey(), entry.getValue());
+        }
+        long end = System.nanoTime();
+        long chainHashMapTime = end - start;
+
+        long start2 = System.nanoTime();
+        for (java.util.Map.Entry<Integer, Integer> entry : dataset.entrySet()) {
+            hm.put(entry.getKey(), entry.getValue());
+        }
+        long end2 = System.nanoTime();
+        long hashMapTime = end2 - start2;
+        double ratio = (double) hashMapTime / chainHashMapTime;
+        return ratio;
     }
 
     public static void main(String[] args) {
@@ -124,5 +157,15 @@ public class ChainHashMap<K, V> extends AbstractHashMap<K, V> {
 
         m.remove(11);
         System.out.println("m: " + m);
+
+        double[] timeArray = new double[100];
+        for (int i=0; i < 100; i++) {
+            timeArray[i] = testSpeed();
+        }
+        double sum = 0;
+        for (double num : timeArray) {
+            sum += num;
+        }
+        System.out.println(sum / timeArray.length);
     }
 }

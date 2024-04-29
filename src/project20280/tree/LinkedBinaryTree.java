@@ -20,7 +20,7 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
     /**
      * The number of nodes in the binary tree
      */
-    private final int size = 0; // number of nodes in the tree
+    private int size = 0; // number of nodes in the tree
 
     /**
      * Constructs an empty binary tree.
@@ -168,15 +168,43 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
      * @throws IllegalStateException if the tree is not empty
      */
     public Position<E> addRoot(E e) throws IllegalStateException {
-        root = createNode(e, null, null, null);;
+        if (root != null) {
+            throw new IllegalArgumentException("tree nonempty");
+        }
+        Node<E> nRoot = createNode(e, null, null, null);
+        root = nRoot;
+
+        size++;
+
         return root;
     }
 
     public void insert(E e) {
-        if (size() == 0) {
-            addRoot(e);
+        if (root == null) {
+            // If the tree is empty, set the root to the new element
+            root = createNode(e, null, null, null);
+            size++;
+        } else {
+            // Otherwise, call the recursive helper method to insert the element
+            insertRecursive(root, e);
         }
+    }
 
+    // Helper method to recursively insert a new element into the tree
+    private void insertRecursive(Node<E> node, E e) {
+
+        if (node.getLeft() == null) {
+
+            node.setLeft(createNode(e, node, null, null));
+            size++;
+        } else if (node.getRight() == null) {
+
+            node.setRight(createNode(e, node, null, null));
+            size++;
+        } else {
+
+            insertRecursive(node.getLeft(), e);
+        }
     }
 
     // recursively add Nodes to binary tree in proper position
@@ -196,8 +224,16 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
      * @throws IllegalArgumentException if p already has a left child
      */
     public Position<E> addLeft(Position<E> p, E e) throws IllegalArgumentException {
-        // TODO
-        return null;
+        Node<E> nNode = validate(p);
+        if (nNode.getLeft() != null) {
+            throw new IllegalArgumentException("already left node exist");
+        }
+        Node<E> nLeft = new Node<>(e, (Node<E>) p, null, null);
+        nNode.setLeft(nLeft);
+
+        size++;
+
+        return nLeft;
     }
 
     /**
@@ -211,8 +247,16 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
      * @throws IllegalArgumentException if p already has a right child
      */
     public Position<E> addRight(Position<E> p, E e) throws IllegalArgumentException {
-        // TODO
-        return null;
+        Node<E> nNode = validate(p);
+        if (nNode.getRight() != null) {
+            throw new IllegalArgumentException("already right node exist");
+        }
+        Node<E> nRight = new Node<>(e, (Node<E>) p, null, null);
+        nNode.setRight(nRight);
+
+        size++;
+
+        return nRight;
     }
 
     /**
@@ -225,8 +269,11 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
      * @throws IllegalArgumentException if p is not a valid Position for this tree.
      */
     public E set(Position<E> p, E e) throws IllegalArgumentException {
-        // TODO
-        return null;
+        Node<E> nNode = validate(p);
+        E rElement = nNode.getElement();
+        nNode.setElement(e);
+
+        return rElement;
     }
 
     /**
@@ -250,6 +297,7 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
         ((Node<E>) t2.root()).setParent(n);
     }
 
+
     /**
      * Removes the node at Position p and replaces it with its child, if any.
      *
@@ -259,8 +307,36 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
      * @throws IllegalArgumentException if p has two children.
      */
     public E remove(Position<E> p) throws IllegalArgumentException {
-        // TODO
-        return null;
+        Node<E> nNode = validate(p);
+        if (numChildren(nNode) == 2) {
+            throw new IllegalArgumentException("2 children");
+        }
+
+        E rElement = nNode.getElement();
+        Node<E> nChild;
+
+        size--;
+
+        if (nNode.getLeft() != null) {
+            nChild = nNode.getLeft();
+        }
+
+        else if (nNode.getRight() != null) {
+            nChild = nNode.getRight();
+        }
+
+        else {
+            nNode.setElement(null);
+            nNode.setLeft(null);
+            nNode.setRight(null);
+            return rElement;
+        }
+
+        nNode.setElement(nChild.getElement());
+        nNode.setLeft(nChild.getLeft());
+        nNode.setRight(nChild.getRight());
+
+        return rElement;
     }
 
     public String toString() {
@@ -268,12 +344,18 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
     }
 
     public void createLevelOrder(ArrayList<E> l) {
-        // TODO
+        root = createLevelOrderHelper(l, root, 0);
     }
 
     private Node<E> createLevelOrderHelper(java.util.ArrayList<E> l, Node<E> p, int i) {
-        // TODO
-        return null;
+        if (i < l.size()) {
+            Node<E> n = createNode(l.get(i), p, null, null);
+            n.left = createLevelOrderHelper(l, n.left, 2 * i + 1);
+            n.right = createLevelOrderHelper(l, n.right, 2 * i + 2);
+            ++size;
+            return n;
+        }
+        return p;
     }
 
     public void createLevelOrder(E[] arr) {
@@ -281,8 +363,14 @@ public class LinkedBinaryTree<E> extends AbstractBinaryTree<E> {
     }
 
     private Node<E> createLevelOrderHelper(E[] arr, Node<E> p, int i) {
-        // TODO
-        return null;
+        if (i < arr.length) {
+            Node<E> n = createNode(arr[i], p, null, null);
+            n.left = createLevelOrderHelper(arr, n.left, 2 * i + 1);
+            n.right = createLevelOrderHelper(arr, n.right, 2 * i + 2);
+            ++size;
+            return n;
+        }
+        return p;
     }
 
     public String toBinaryTreeString() {

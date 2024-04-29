@@ -1,8 +1,6 @@
 package wordle;
 
 import project20280.interfaces.Entry;
-import project20280.interfaces.Position;
-import project20280.stacksqueues.LinkedDeque;
 import project20280.tree.LinkedBinaryTree;
 import project20280.tree.LinkedBinaryTree.Node;
 import project20280.priorityqueue.HeapPriorityQueue;
@@ -35,6 +33,7 @@ public class Huffman {
         return freqMap;
     }
 
+
     public LinkedBinaryTree<String> huffTreeGen() {
         HeapPriorityQueue<Integer, LinkedBinaryTree<String>> pq = new HeapPriorityQueue<>();
         Map<String, Integer> freqMap = freqCounter(readDictionary(filename));
@@ -62,13 +61,17 @@ public class Huffman {
         Huffman huff = new Huffman("wordle/resources/dictionary.txt");
         System.out.print(huff.huffTreeGen().toBinaryTreeString());
         System.out.print(freqCounter(huff.dict));
+        huff.huffDictLengthComp();
     }
 
-    public double huffDictLengthComp() {
+    public void huffDictLengthComp() {
         LinkedBinaryTree<String> huffTree = huffTreeGen();
 
         String bitString = "";
+        Entry<String, Integer> wordBitStringShort = new Wordle.HEntry<>("x", 200);
+        Entry<String, Integer> wordBitStringTop = new Wordle.HEntry<>("x", 0);
         for (String s: dict) {
+            String wordbitStringCurr = "";
             for (char c: s.toCharArray()) {
                 String strC = String.valueOf(c);
                 Node<String> curr = (Node<String>) huffTree.root();
@@ -81,21 +84,33 @@ public class Huffman {
                     String right = curr.getRight().getElement();
 
                     if (left.contains(strC)) {
+                        wordbitStringCurr += "0";
                         bitString += "0";
                         curr = curr.getLeft();
                     }
                     else if (right.contains(strC)) {
+                        wordbitStringCurr += "1";
                         bitString += "1";
                         curr = curr.getRight();
                     }
                 }
+
+            }
+            if (wordbitStringCurr.length() > wordBitStringTop.getValue()) {
+                wordBitStringTop = new Wordle.HEntry<>(s, wordbitStringCurr.length());
+            }
+            if (wordbitStringCurr.length() < wordBitStringShort.getValue()) {
+                wordBitStringShort = new Wordle.HEntry<>(s, wordbitStringCurr.length());
             }
         }
 
         //testing length of original dict
         int oDictLength = dict.size() * 5 * 8;
         double bitStringLength = (double) bitString.length();
-        return bitStringLength / oDictLength;
+        System.out.println("bit length: " + bitStringLength);
+        System.out.println("comp. ratio: " + bitStringLength / oDictLength);
+        System.out.println("longest word: " + wordBitStringTop.getKey() + "\nbit length " + wordBitStringTop.getValue());
+        System.out.println("shortest word: " + wordBitStringShort.getKey() + "\nbit length: " + wordBitStringShort.getValue());
     }
     public static void dictPrint(HashMap<String, Integer> dict) {
         boolean first = true;

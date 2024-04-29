@@ -29,8 +29,12 @@ public class UnsortedTableMap<K, V> extends AbstractMap<K, V> {
      * Returns the index of an entry with equal key, or -1 if none found.
      */
     private int findIndex(K key) {
-        // TODO
-        return 0;
+        for(int i=0;i<table.size();i++){
+            if((table.get(i)).getKey().equals(key)){
+                return i;
+            }
+        }
+        return -1;
     }
 
     // public methods
@@ -54,7 +58,11 @@ public class UnsortedTableMap<K, V> extends AbstractMap<K, V> {
      */
     @Override
     public V get(K key) {
-        // TODO
+        for(MapEntry<K,V> mapEntry: table){
+            if(mapEntry.getKey().equals(key)){
+                return mapEntry.getValue();
+            }
+        }
         return null;
     }
 
@@ -70,8 +78,16 @@ public class UnsortedTableMap<K, V> extends AbstractMap<K, V> {
      */
     @Override
     public V put(K key, V value) {
-        // TODO
-        return null;
+        for(Entry<K,V> entry : entrySet()){
+            if(entry.getKey().equals(key)){
+                table.remove(findIndex(key));
+                table.add(new MapEntry<>(key,value));
+                return value;
+            }
+        }
+
+        table.add(new MapEntry<>(key,value));
+        return value;
     }
 
     /**
@@ -84,7 +100,13 @@ public class UnsortedTableMap<K, V> extends AbstractMap<K, V> {
      */
     @Override
     public V remove(K key) {
-        // TODO
+        for(MapEntry<K,V> mapEntry: table){
+            if(mapEntry.getKey().equals(key)){
+                MapEntry<K,V> deletedEntry = mapEntry;
+                table.remove(mapEntry);
+                return deletedEntry.getValue();
+            }
+        }
         return null;
     }
 
@@ -97,8 +119,6 @@ public class UnsortedTableMap<K, V> extends AbstractMap<K, V> {
         }
 
         public Entry<K, V> next() {
-            if (j == table.size())
-                throw new NoSuchElementException("No further entries");
             return table.get(j++);
         }
 

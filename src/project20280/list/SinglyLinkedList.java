@@ -2,6 +2,7 @@ package project20280.list;
 
 import project20280.interfaces.List;
 
+import java.security.KeyStore;
 import java.util.Iterator;
 
 public class SinglyLinkedList<E> implements List<E> {
@@ -34,7 +35,7 @@ public class SinglyLinkedList<E> implements List<E> {
          * @return the element stored at the node
          */
         public E getElement() {
-            return null;
+            return element;
         }
 
         /**
@@ -74,54 +75,97 @@ public class SinglyLinkedList<E> implements List<E> {
 
     //@Override
     public int size() {
-        // TODO
-        return 0;
+        return size;
     }
 
     //@Override
     public boolean isEmpty() {
-        // TODO
+        if (size == 0) {
+            return true;
+        }
         return false;
     }
 
     @Override
     public E get(int position) {
-        // TODO
-        return null;
+        Node<E> curr = head;
+        int i=0;
+        while (i < position ) {
+            curr = curr.getNext();
+            i++;
+        }
+        return curr.getElement();
+
     }
 
     @Override
     public void add(int position, E e) {
-        // TODO
+        Node<E> curr = head;
+        int i=0;
+        while (i < position-1 ) {
+            curr = curr.getNext();
+            i++;
+        }
+        Node<E> newest = new Node<E>(e, curr.getNext());
+        curr.setNext(newest);
+
+        size++;
     }
 
 
     @Override
     public void addFirst(E e) {
-        // TODO
+        head = new Node<E>(e, head);
+        size++;
     }
 
     @Override
     public void addLast(E e) {
-        // TODO
+        if (this.isEmpty()) {
+            addFirst(e);
+        }
+        else {
+            add(size, e);
+        }
     }
 
     @Override
     public E remove(int position) {
-        // TODO
-        return null;
+        Node<E> curr = head;
+        int i=0;
+        while (i < position-1 ) {
+            curr = curr.getNext();
+            i++;
+        }
+        Node<E> removed = curr.getNext();
+        Node<E> succesor = removed.getNext();
+        curr.setNext(succesor);
+
+        size--;
+        return removed.getElement();
     }
 
     @Override
     public E removeFirst() {
-        // TODO
-        return null;
+        if (this.isEmpty()) {
+            return null;
+        }
+        Node<E> removed = head;
+        head = null;
+        size--;
+        return removed.getElement();
     }
 
     @Override
     public E removeLast() {
-        // TODO
-        return null;
+        E removedE;
+        if (size == 1) {
+            removedE = removeFirst();
+        }
+        else {
+            removedE = remove(size-1);
+        }
+        return removedE;
     }
 
     //@Override

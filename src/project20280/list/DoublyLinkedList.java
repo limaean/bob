@@ -9,7 +9,7 @@ public class DoublyLinkedList<E> implements List<E> {
     private static class Node<E> {
         private final E data;
         private Node<E> next;
-        private final Node<E> prev;
+        private Node<E> prev;
 
         public Node(E e, Node<E> p, Node<E> n) {
             data = e;
@@ -33,7 +33,7 @@ public class DoublyLinkedList<E> implements List<E> {
 
     private final Node<E> head;
     private final Node<E> tail;
-    private final int size = 0;
+    private int size = 0;
 
     public DoublyLinkedList() {
         head = new Node<E>(null, null, null);
@@ -42,36 +42,64 @@ public class DoublyLinkedList<E> implements List<E> {
     }
 
     private void addBetween(E e, Node<E> pred, Node<E> succ) {
-        // TODO
+        Node<E> insert = new Node<E>(e, pred, succ);
+        pred.next = insert;
+        succ.prev = insert;
+        size++;
+    }
+
+    public Node<E> looper(Node<E> curr, int pos) {
+        if (curr == head.next) {
+            for (int i = 0; i < pos; i++) {
+                curr = curr.getNext();
+            }
+        } else {
+            for (int i = size - 1; pos < i; i--) {
+                curr = curr.getPrev();
+            }
+        }
+        return curr;
+    }
+
+    public Node<E> pathFinder(int position) {
+        Node<E> curr;
+        int half = (size / 2) + 1;
+        if (position <= half) {
+            curr = head.next;
+        } else {
+            curr = tail.prev;
+        }
+        return looper(curr, position);
     }
 
     @Override
     public int size() {
-        // TODO
-        return 0;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        // TODO
+        if (size == 0) {
+            return true;
+        }
         return false;
     }
 
     @Override
     public E get(int i) {
-        // TODO
-        return null;
+        return pathFinder(i).getData();
     }
 
     @Override
     public void add(int i, E e) {
-        // TODO
+        Node<E> curr = pathFinder(i);
+        addBetween(e, curr.prev, curr);
     }
 
     @Override
     public E remove(int i) {
-        // TODO
-        return null;
+        Node<E> newest = pathFinder(i);
+        return remove(newest);
     }
 
     private class DoublyLinkedListIterator<E> implements Iterator<E> {
@@ -96,8 +124,12 @@ public class DoublyLinkedList<E> implements List<E> {
     }
 
     private E remove(Node<E> n) {
-        // TODO
-        return null;
+        Node<E> pred = n.prev;
+        Node<E> succ = n.next;
+        pred.next = succ;
+        succ.prev = pred;
+        size--;
+        return n.getData();
     }
 
     public E first() {
@@ -108,30 +140,34 @@ public class DoublyLinkedList<E> implements List<E> {
     }
 
     public E last() {
-        // TODO
-        return null;
+        if (isEmpty()) {
+            return null;
+        }
+        return tail.prev.getData();
     }
 
     @Override
     public E removeFirst() {
-        // TODO
-        return null;
+        return remove(0);
     }
 
     @Override
     public E removeLast() {
-        // TODO
-        return null;
+        return remove(size - 1);
     }
 
     @Override
     public void addLast(E e) {
-        // TODO
+        if (size == 0) {
+            addFirst(e);
+        } else {
+            addBetween(e, tail.prev, tail);
+        }
     }
 
     @Override
     public void addFirst(E e) {
-        // TODO
+        addBetween(e, head, head.next);
     }
 
     public String toString() {

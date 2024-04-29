@@ -1,20 +1,21 @@
 package wordle;
 
+import project20280.hashtable.ChainHashMap;
+import project20280.interfaces.Entry;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class Wordle {
+public class WordleChainCalc {
 
     String fileName = "wordle/resources/dictionary.txt";
     //String fileName = "wordle/resources/extended-dictionary.txt";
     List<String> dictionary = null;
 
     int guesses = 0;
-    final int num_guesses = 5;
+    final int num_guesses = 6;
     final long seed = 42;
     //Random rand = new Random(seed);
     Random rand = new Random();
@@ -26,7 +27,7 @@ public class Wordle {
     public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
     public static final String ANSI_GREY_BACKGROUND = "\u001B[100m";
 
-    Wordle() {
+    WordleChainCalc() {
 
         this.dictionary = readDictionary(fileName);
 
@@ -36,40 +37,45 @@ public class Wordle {
     }
 
     public static void main(String[] args) {
-        Wordle game = new Wordle();
 
-        String target = game.getRandomTargetWord();
-
-        System.out.println("target: " + target);
-
-        game.play(target);
-
+        int j = 0;
+        for (int i=0; i < 100; i++) {
+            WordleCalc game = new WordleCalc();
+            String target = game.getRandomTargetWord();
+            System.out.println(target);
+            Boolean bool = game.play(target);
+            if (!(bool)) {
+                j++;
+            }
+            System.out.print("number of successes: " + j);
+        }
     }
 
-    public void play(String target) {
+    public boolean play(String target) {
         ArrayList<String> wrongAList = new ArrayList<>();
         ArrayList<String> superWrongAList = new ArrayList<>();
         Map<String, Integer> rightLetters = new HashMap<>();
-        HEntry<Map<String, Integer>, List<String>> entry = null;
-        Map<String, Integer> freqMap1 = Huffman.freqCounter(readDictionary(fileName));
-        System.out.println("initial load factor: " + getLoadFactor(freqMap1));
+        HEntry<ChainHashMap<String, Integer>, List<String>> entry = null;
+        ChainHashMap<String, Integer> freqMap1 = WordleChain.freqCounter(readDictionary(fileName));
+        String[] guessArr = new String[1];
         for(int i = 0; i < num_guesses; ++i) {
             if (i == 0) {
-                entry = solveInitial(freqMap1, dictionary);
+                entry = solveInitial(freqMap1, dictionary, guessArr);
             }
             else if (i == 1) {
-                Map<String, Integer> freqMap2 = entry.getKey();
-                entry = solveInitial(freqMap2, entry.getValue());
+                ChainHashMap<String, Integer> freqMap2 = entry.getKey();
+                entry = solveInitial(freqMap2, entry.getValue(), guessArr);
             }
             else {
-                solverPast(wrongAList, superWrongAList, rightLetters);
+                solverPast(wrongAList, superWrongAList, rightLetters, guessArr);
             }
-            String guess = getGuess();
-            dictionary.remove(guess);
+
+            String guess = guessArr[0];
+            System.out.println(guess);
 
             if(guess == target) { // you won!
                 win(target);
-                return;
+                return false;
             }
 
             // the hint is a string where green="+", yellow="o", grey="_"
@@ -87,7 +93,7 @@ public class Wordle {
             // loop over each entry:
             //  if hint == "+" (green) skip it
             //  else check if the letter is present in the target word. If yes, set to "o" (yellow)
-            //ArrayList<Character> wrongLetters = new ArrayList<>();
+
             String wrongLetters = "";
             for (int k = 0; k < 5; k++) {
                 if (hint[k] != "+") {
@@ -127,20 +133,20 @@ public class Wordle {
                 if(hint[k] == "+") num_green += 1;
             }
             if(num_green == 5) {
-                 win(target);
-                 return;
+                win(target);
+                return false;
             }
         }
-
         lost(target);
+        return true;
     }
-    public Wordle.HEntry<Map<String, Integer>, List<String>> solveInitial(Map<String, Integer> freqMap, List<String> dictionary) {
+    public HEntry<ChainHashMap<String, Integer>, List<String>> solveInitial(ChainHashMap<String, Integer> freqMap, List<String> dictionary, String[] guessArr) {
         //copy array
         dictionary = new ArrayList<>(dictionary);
         int[] topValues = new int[3];
         String[] topKeys = new String[3];
 
-        for (Map.Entry<String, Integer> entry : freqMap.entrySet()) {
+        for (Entry<String, Integer> entry : freqMap.entrySet()) {
             int value = entry.getValue();
             String key = entry.getKey();
 
@@ -210,11 +216,11 @@ public class Wordle {
                 }
             }
         }
-        System.out.println("guess: " + mostWord);
-        HEntry<Map<String, Integer>, List<String>> mapNList = new HEntry<>(freqMap, dictionary);
+        guessArr[0] = mostWord;
+        HEntry<ChainHashMap<String, Integer>, List<String>> mapNList = new HEntry<>(freqMap, dictionary);
         return mapNList;
     }
-    public void solverPast(ArrayList<String> wrongList, ArrayList<String> superWrongList, Map<String, Integer> rightLetters) {
+    public void solverPast(ArrayList<String> wrongList, ArrayList<String> superWrongList, Map<String, Integer> rightLetters, String[] guessArr) {
         /*find 3 most common letters */
         ArrayList<String> wordsToRemove = new ArrayList<>();
 
@@ -248,8 +254,8 @@ public class Wordle {
         }
         dictionary.removeAll(wordsToRemove);
         // Remove the words that need to be removed
-        String random = dictionary.get(0);
-        System.out.println("guess: " + random);
+        guessArr[0] = getRandomTargetWord();
+        dictionary.remove(guessArr[0]);
     }
     //utility function
     public static boolean hasDuplicateCharacters(String word) {
@@ -284,6 +290,7 @@ public class Wordle {
         }
         return false; // No duplicate letter preceding the specified index
     }
+
     //utility function
     public static String removeCharAtIndex(String str, int index) {
 
@@ -291,6 +298,7 @@ public class Wordle {
         return str.substring(0, index) + str.substring(index + 1);
     }
     public void lost(String target) {
+
         System.out.println();
         System.out.println(lostMessage + target.toUpperCase() + ".");
         System.out.println();
@@ -304,7 +312,6 @@ public class Wordle {
     }
 
     public String getGuess() {
-        List<String> dict = readDictionary(fileName);
         Scanner myScanner = new Scanner(System.in, StandardCharsets.UTF_8.displayName());  // Create a Scanner object
         System.out.println("Guess:");
 
@@ -312,7 +319,7 @@ public class Wordle {
         userWord = userWord.toLowerCase(); // covert to lowercase
 
         // check the length of the word and if it exists
-        while ((userWord.length() != 5) || !(dict.contains(userWord))) {
+        while ((userWord.length() != 5) || !(dictionary.contains(userWord))) {
             if ((userWord.length() != 5)) {
                 System.out.println("The word " + userWord + " does not have 5 letters.");
             } else {
@@ -324,7 +331,7 @@ public class Wordle {
         }
         return userWord;
     }
-//utility
+    //utility
     public static int countOccurrences(String str, String target) {
         int count = 0;
         for (int i = 0; i < str.length(); i++) {
@@ -334,12 +341,7 @@ public class Wordle {
         }
         return count;
     }
-    //utility func
-    public static <K, V> double getLoadFactor(Map<K, V> map) {
-        int size = map.size();
-        int capacity = 1 << (int) (Math.log(map.size()) / Math.log(2) + 1);
-        return (double) size / capacity;
-    }
+
     public String getRandomTargetWord() {
         // generate random values from 0 to dictionary size
         return dictionary.get(rand.nextInt(dictionary.size()));

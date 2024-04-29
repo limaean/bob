@@ -12,39 +12,95 @@ import project20280.interfaces.Queue;
 
 public class LinkedCircularQueue<E> implements Queue<E> {
 
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
+    private static class Node<E> {
+        private E element;
+        private Node<E> next;
 
+        public Node(E e, Node<E> n) {
+            element = e;
+            next = n;
+        }
+
+        public E getElement() {
+            return element;
+        }
+
+        public Node<E> getNext() {
+            return next;
+        }
+
+        public void setNext(Node<E> n) {
+            next = n;
+        }
     }
+    private Node<E> tail = null;
+    private int size = 0;
+    public LinkedCircularQueue() { } // constructs an empty queue
+
+
+    public static void main(String[] args) {
+        LinkedCircularQueue<Integer> queue = new LinkedCircularQueue<>();
+        queue.enqueue(1);
+        queue.enqueue(2);
+        queue.enqueue(3);
+        System.out.println("First: " + queue.first());
+        queue.rotate();
+        System.out.println("First after one rotation: " + queue.first());
+        queue.dequeue();
+        System.out.println("First after dequeue: " + queue.first());
+    }
+
 
     @Override
     public int size() {
-        // TODO Auto-generated method stub
-        return 0;
+
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        // TODO Auto-generated method stub
-        return false;
+        return size==0;
     }
 
     @Override
     public void enqueue(E e) {
-        // TODO Auto-generated method stub
+        if (size == 0) {
+            tail = new Node<>(e, null);
+            tail.setNext(tail); // link to itself circularly
+        } else {
+            Node<E> newest = new Node<>(e, tail.getNext());
+            tail.setNext(newest);
+            tail = newest;
+        }
+        size++;
 
     }
 
     @Override
     public E first() {
-        // TODO Auto-generated method stub
-        return null;
+        if (isEmpty()) return null;
+        return tail.getNext().getElement();
     }
 
     @Override
     public E dequeue() {
-        // TODO Auto-generated method stub
-        return null;
+        if (isEmpty()) {
+            return null;
+        }
+        Node<E> head = tail.getNext();
+        if (head == tail) {
+            tail = null;
+        }
+        else {
+            tail.setNext(head.getNext());
+        }
+        size--;
+        return head.getElement();
+    }
+    public void rotate() {
+        if (tail != null) {
+            tail = tail.getNext(); // the old head becomes the new tail
+        }
     }
 
 }
